@@ -26,20 +26,62 @@ export async function POST(request: NextRequest) {
     const pythonFormData = new FormData();
     pythonFormData.append('file', file);
 
-    const response = await fetch(`${PYTHON_API_URL}/extract-pdf`, {
+    const apiUrl = `${PYTHON_API_URL}/extract-pdf`;
+    console.log('Calling Python API:', apiUrl);
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       body: pythonFormData,
     });
 
+    // 응답 타입 확인
+    const contentType = response.headers.get('content-type');
+    console.log('Response status:', response.status);
+    console.log('Response content-type:', contentType);
+
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorMessage = 'PDF 텍스트 추출에 실패했습니다.';
+      
+      // JSON 응답인지 확인
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          const text = await response.text();
+          errorMessage = `서버 오류 (${response.status}): ${text.substring(0, 200)}`;
+        }
+      } else {
+        // HTML 응답인 경우
+        const text = await response.text();
+        errorMessage = `서버 오류 (${response.status}): ${text.substring(0, 200)}`;
+      }
+      
       return NextResponse.json(
-        { error: errorData.error || 'PDF 텍스트 추출에 실패했습니다.' },
+        { error: errorMessage },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    // JSON 응답인지 확인
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      return NextResponse.json(
+        { error: `예상치 못한 응답 형식입니다. 서버가 JSON을 반환하지 않습니다: ${text.substring(0, 200)}` },
+        { status: 500 }
+      );
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      const text = await response.text();
+      return NextResponse.json(
+        { error: `JSON 파싱 오류: ${text.substring(0, 200)}` },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       text: data.text,

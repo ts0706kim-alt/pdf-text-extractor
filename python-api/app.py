@@ -14,6 +14,11 @@ CORS(app, resources={
     }
 })
 
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint"""
+    return jsonify({'status': 'ok', 'service': 'pdf-extractor-api'}), 200
+
 @app.route('/extract-pdf', methods=['POST'])
 def extract_pdf():
     try:
@@ -64,9 +69,13 @@ def extract_pdf():
         })
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         print(f'PDF 추출 오류: {str(e)}')
+        print(f'Traceback: {error_trace}')
         return jsonify({
-            'error': f'PDF 텍스트 추출 중 오류가 발생했습니다: {str(e)}'
+            'error': f'PDF 텍스트 추출 중 오류가 발생했습니다: {str(e)}',
+            'details': str(e) if len(str(e)) < 200 else str(e)[:200]
         }), 500
 
 if __name__ == '__main__':
