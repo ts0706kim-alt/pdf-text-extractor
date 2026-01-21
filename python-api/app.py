@@ -5,7 +5,14 @@ import io
 import os
 
 app = Flask(__name__)
-CORS(app)
+# CORS 설정: 모든 origin 허용
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 @app.route('/extract-pdf', methods=['POST'])
 def extract_pdf():
