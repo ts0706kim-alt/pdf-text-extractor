@@ -3,11 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // Python API 서버 URL (환경 변수로 설정 가능)
 const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:5000';
 
+// 런타임 설정 (Vercel에서 API 라우트가 제대로 작동하도록)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // GET 메서드 추가 (헬스 체크용)
 export async function GET(request: NextRequest) {
   return NextResponse.json({
     status: 'ok',
-    pythonApiUrl: PYTHON_API_URL,
+    pythonApiUrl: PYTHON_API_URL ? '설정됨' : '설정되지 않음',
     message: 'PDF Extract API is running'
   });
 }
