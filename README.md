@@ -1,4 +1,4 @@
-# PDF 텍스트 추출 프로그램
+# PDFTextExtractor
 
 PDF 파일에서 텍스트를 추출하는 웹 애플리케이션입니다.
 
@@ -7,6 +7,15 @@ PDF 파일에서 텍스트를 추출하는 웹 애플리케이션입니다.
 - PDF 파일 업로드
 - PDF에서 텍스트 자동 추출
 - 추출된 텍스트 확인 및 다운로드
+- 다크 테마 UI
+
+## 기술 스택
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- pdf-parse
 
 ## 설치 방법
 
@@ -29,3 +38,10 @@ npm run dev
 3. 추출된 텍스트가 화면에 표시됩니다.
 4. "텍스트 다운로드" 버튼을 클릭하여 텍스트 파일로 저장할 수 있습니다.
 
+## 배포
+
+이 프로젝트는 Vercel에 배포할 수 있습니다.
+
+## 라이선스
+
+© 2026 Kevin. This program is the property of Kevin.
