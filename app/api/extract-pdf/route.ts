@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // Python API 서버 URL (환경 변수로 설정 가능)
 const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:5000';
 
+// GET 메서드 추가 (헬스 체크용)
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    status: 'ok',
+    pythonApiUrl: PYTHON_API_URL,
+    message: 'PDF Extract API is running'
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -25,6 +34,11 @@ export async function POST(request: NextRequest) {
     // Python API로 파일 전송
     const pythonFormData = new FormData();
     pythonFormData.append('file', file);
+
+    // 환경 변수 확인
+    if (!process.env.PYTHON_API_URL) {
+      console.warn('PYTHON_API_URL 환경 변수가 설정되지 않았습니다. 기본값 사용:', PYTHON_API_URL);
+    }
 
     const apiUrl = `${PYTHON_API_URL}/extract-pdf`;
     console.log('Calling Python API:', apiUrl);
