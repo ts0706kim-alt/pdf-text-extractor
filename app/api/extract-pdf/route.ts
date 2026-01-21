@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pdf from 'pdf-parse';
+
+// Python API 서버 URL (환경 변수로 설정 가능)
+const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:5000';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,28 +22,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // File을 Buffer로 변환
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Python API로 파일 전송
+    const pythonFormData = new FormData();
+    pythonFormData.append('file', file);
 
-    // PDF 텍스트 추출
-    const data = await pdf(buffer);
-    const text = data.text;
+    const response = await fetch(`${PYTHON_API_URL}/extract-pdf`, {
+      method: 'POST',
+      body: pythonFormData,
+    });
 
-    if (!text || text.trim().length === 0) {
+    if (!response.ok) {
+      const errorData = await response.json();
       return NextResponse.json(
-        { error: 'PDF에서 텍스트를 추출할 수 없습니다. 이미지로만 구성된 PDF일 수 있습니다.' },
-        { status: 400 }
+        { error: errorData.error || 'PDF 텍스트 추출에 실패했습니다.' },
+        { status: response.status }
       );
     }
 
+    const data = await response.json();
+
     return NextResponse.json({
-      text: text,
-      pages: data.numpages,
-      info: data.info,
+      text: data.text,
+      pages: data.pages,
+      total_chars: data.total_chars,
+      pages_info: data.pages_info,
     });
   } catch (error) {
     console.error('PDF 추출 오류:', error);
+    
+    // Python API 서버에 연결할 수 없는 경우
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return NextResponse.json(
+        { error: 'PDF 추출 서버에 연결할 수 없습니다. Python API 서버가 실행 중인지 확인해주세요.' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'PDF 텍스트 추출 중 오류가 발생했습니다.' },
       { status: 500 }
